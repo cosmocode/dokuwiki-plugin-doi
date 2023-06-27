@@ -74,11 +74,11 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
         $class = hsc($message['type']);
 
         $authorList = [];
-        foreach ($message['author'] ?? [] as $author) {
+        foreach ($message['author'] ?? $message['editor'] ?? [] as $author) {
             $authorList[] = '<strong>' . hsc($author['given'].' '.$author['family']) . '</strong>';
         }
 
-        if (isset($message['container-title'])) {
+        if (!empty($message['container-title'])) {
             $journal = $message['container-title'];
             $journal .= ' ' . join('/', [$message['volume'] ?? null, $message['issue'] ?? null]);
             $journal = '<span>' . hsc($journal) . '</span>';
