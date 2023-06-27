@@ -6,7 +6,7 @@
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Andreas Gohr <gohr@cosmocode.de>
  */
-class syntax_plugin_doi extends \dokuwiki\Extension\SyntaxPlugin
+class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
 {
     /** @inheritDoc */
     public function getType()
@@ -29,7 +29,7 @@ class syntax_plugin_doi extends \dokuwiki\Extension\SyntaxPlugin
     /** @inheritDoc */
     public function connectTo($mode)
     {
-        $this->Lexer->addSpecialPattern('\[\[doi>[^\]]+\]\]', $mode, 'plugin_doi');
+        $this->Lexer->addSpecialPattern('\[\[doi>[^\]]+\]\]', $mode, 'plugin_doi_doi');
     }
 
     /** @inheritDoc */
@@ -75,7 +75,7 @@ class syntax_plugin_doi extends \dokuwiki\Extension\SyntaxPlugin
 
         $authorList = [];
         foreach ($message['author'] ?? [] as $author) {
-            $authorList[] = '<strong>' . hsc($author['family']) . '</strong>';
+            $authorList[] = '<strong>' . hsc($author['given'].' '.$author['family']) . '</strong>';
         }
 
         if (isset($message['container-title'][0])) {
