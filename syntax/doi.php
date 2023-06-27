@@ -44,8 +44,8 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     public function render($mode, Doku_Renderer $renderer, $data)
     {
         $publication = $this->fetchInfo($data['doi']);
-        $title = $publication['message']['title'][0] ?? $data['doi'];
-        $url = $publication['message']['URL'] ?? 'https://doi.org/' . $data['doi'];
+        $title = $publication['title'][0] ?? $data['doi'];
+        $url = $publication['URL'] ?? 'https://doi.org/' . $data['doi'];
 
         if ($mode !== 'xhtml' || !$publication) {
             $renderer->externallink($url, $title);
@@ -53,7 +53,7 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
         }
 
         /** @var Doku_Renderer_xhtml $renderer */
-        $this->formatPub($publication['message'], $renderer);
+        $this->formatPub($publication, $renderer);
 
         return true;
     }
@@ -68,7 +68,7 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     protected function formatPub($message, $renderer)
     {
         $doi = $message['DOI'];
-        $title = $message['title'][0] ?? $doi;
+        $title = $message['title'] ?? $doi;
         $url = $message['URL'] ?? 'https://doi.org/' . $doi;
 
         $class = hsc($message['type']);
@@ -78,8 +78,8 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
             $authorList[] = '<strong>' . hsc($author['given'].' '.$author['family']) . '</strong>';
         }
 
-        if (isset($message['container-title'][0])) {
-            $journal = $message['container-title'][0];
+        if (isset($message['container-title'])) {
+            $journal = $message['container-title'];
             $journal .= ' ' . join('/', [$message['volume'] ?? null, $message['issue'] ?? null]);
             $journal = '<span>' . hsc($journal) . '</span>';
             if (isset($message['page'])) {
@@ -128,8 +128,9 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     protected function fetchInfo($doi)
     {
         $http = new \dokuwiki\HTTP\DokuHTTPClient();
+        $http->headers['Accept'] = 'application/vnd.citationstyles.csl+json';
 
-        $json = $http->get('https://api.crossref.org/works/' . $doi);
+        $json = $http->get('https://doi.org/' . $doi);
         if (!$json) return false;
 
         return json_decode($json, true);
