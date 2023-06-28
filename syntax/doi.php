@@ -127,12 +127,17 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
      */
     protected function fetchInfo($doi)
     {
+        $cache = getCacheName($doi, '.doi.json');
+        if(@filemtime($cache) > filemtime(__FILE__)) {
+            return json_decode(file_get_contents($cache), true);
+        }
+
         $http = new \dokuwiki\HTTP\DokuHTTPClient();
         $http->headers['Accept'] = 'application/vnd.citationstyles.csl+json';
-
         $json = $http->get('https://doi.org/' . $doi);
         if (!$json) return false;
 
+        file_put_contents($cache, $json);
         return json_decode($json, true);
     }
 }

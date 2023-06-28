@@ -80,23 +80,10 @@ class syntax_plugin_doi_isbn extends \dokuwiki\Extension\SyntaxPlugin
             $authorList[] = '<strong>' . hsc($author['name']) . '</strong>';
         }
 
-        /*
-        if (isset($message['container-title'][0])) {
-            $journal = $message['container-title'][0];
-            $journal .= ' ' . join('/', [$message['volume'] ?? null, $message['issue'] ?? null]);
-            $journal = '<span>' . hsc($journal) . '</span>';
-            if (isset($message['page'])) {
-                $journal .= ' <i>p' . hsc($message['page']) . '</i>';
-            }
-            $journal = ' <span class="journal">' . $journal . '</span>';
-        } else {
-            $journal = '';
-        }  */
-
         $published = $message['publish_date'] ?? '';
-        if(preg_match('/\b(\d{4})\b/', $published, $m)) {
+        if (preg_match('/\b(\d{4})\b/', $published, $m)) {
             $published = ' <span>(' . hsc($m[1]) . ')</span>';
-        }else {
+        } else {
             $published = '';
         }
 
@@ -131,12 +118,17 @@ class syntax_plugin_doi_isbn extends \dokuwiki\Extension\SyntaxPlugin
      */
     protected function fetchInfo($isbn)
     {
-        $http = new \dokuwiki\HTTP\DokuHTTPClient();
+        $cache = getCacheName($isbn, '.isbn.json');
+        if (@filemtime($cache) > filemtime(__FILE__)) {
+            $data = json_decode(file_get_contents($cache), true);
+        } else {
+            $http = new \dokuwiki\HTTP\DokuHTTPClient();
+            $json = $http->get('https://openlibrary.org/api/books?jscmd=details&format=json&bibkeys=ISBN:' . $isbn);
+            if (!$json) return false;
 
-        $json = $http->get('https://openlibrary.org/api/books?jscmd=details&format=json&bibkeys=ISBN:' . $isbn);
-        if (!$json) return false;
-
-        $data = json_decode($json, true);
+            file_put_contents($cache, $json);
+            $data = json_decode($json, true);
+        }
         return array_shift($data); // first entry
     }
 }
