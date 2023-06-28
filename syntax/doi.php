@@ -80,7 +80,7 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
 
         if (!empty($message['container-title'])) {
             $journal = $message['container-title'];
-            $journal .= ' ' . join('/', [$message['volume'] ?? null, $message['issue'] ?? null]);
+            $journal .= ' ' . join('/', array_filter([$message['volume'] ?? null, $message['issue'] ?? null]));
             $journal = '<span>' . hsc($journal) . '</span>';
             if (isset($message['page'])) {
                 $journal .= ' <i>p' . hsc($message['page']) . '</i>';
