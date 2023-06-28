@@ -35,9 +35,10 @@ class syntax_plugin_doi_isbn extends \dokuwiki\Extension\SyntaxPlugin
     /** @inheritDoc */
     public function handle($match, $state, $pos, Doku_Handler $handler)
     {
-        $doi = substr($match, 7, -2);
+        $isbn = substr($match, 7, -2);
+        $isbn = preg_replace('/[^0-9X]/i', '', $isbn);
 
-        return ['isbn' => $doi];
+        return ['isbn' => $isbn];
     }
 
     /** @inheritDoc */
