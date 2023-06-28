@@ -72,7 +72,7 @@ class syntax_plugin_doi_isbn extends \dokuwiki\Extension\SyntaxPlugin
         $message = $message['details'];
 
         $isbn = $message['isbn_13'][0] ?? $message['isbn_10'][0] ?? '';
-        $title = $message['title'] ?? $isbn;
+        $title = $message['full_title'] ?? $message['title'] ?? $isbn;
 
         $class = 'book';
 
