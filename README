@@ -1,6 +1,6 @@
 doi plugin for DokuWiki
 
-Easily link to publications based on DOI
+Easily link to publications based on DOI (or ISBN)
 
 All documentation for this plugin can be found at
 https://www.dokuwiki.org/plugin:doi
