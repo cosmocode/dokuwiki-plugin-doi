@@ -1,5 +1,9 @@
 <?php
 
+use dokuwiki\plugin\doi\Resolver\AbstractResolver;
+use \dokuwiki\plugin\doi\Resolver\DoiResolver;
+
+
 /**
  * DokuWiki Plugin doi (Syntax Component)
  *
@@ -37,16 +41,27 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     {
         $doi = substr($match, 6, -2);
 
-        return ['doi' => $doi];
+        return ['id' => $doi];
     }
 
     /** @inheritDoc */
     public function render($mode, Doku_Renderer $renderer, $data)
     {
-        $publication = $this->fetchInfo($data['doi']);
-        $title = $publication['title'][0] ?? $data['doi'];
-        $url = $publication['URL'] ?? 'https://doi.org/' . $data['doi'];
+        $resolver = $this->getResolver();
+        $data['id'] = $resolver->cleanID($data['id']);
 
+        try {
+            $publication = $resolver->getData($data['id']);
+            $url = $publication['url'];
+            $title = $publication['title'];
+        } catch (Exception $e) {
+            msg(hsc($e->getMessage()), -1);
+            $publication = null;
+            $url = $resolver->getFallbackURL($data['id']);
+            $title = $data['id'];
+        }
+
+        // FIXME use nicer rendering for non-xhtml modes
         if ($mode !== 'xhtml' || !$publication) {
             $renderer->externallink($url, $title);
             return true;
@@ -59,86 +74,55 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     }
 
     /**
-     * Render the given message
-     *
-     * @param array $message
-     * @param Doku_Renderer_xhtml $renderer
-     * @return void
+     * @return AbstractResolver
      */
-    protected function formatPub($message, $renderer)
+    protected function getResolver()
     {
-        $doi = $message['DOI'];
-        $title = $message['title'] ?? $doi;
-        $url = $message['URL'] ?? 'https://doi.org/' . $doi;
-
-        $class = hsc($message['type']);
-
-        $authorList = [];
-        foreach ($message['author'] ?? $message['editor'] ?? [] as $author) {
-            $authorList[] = '<strong>' . hsc($author['given'].' '.$author['family']) . '</strong>';
-        }
-
-        if (!empty($message['container-title'])) {
-            $journal = $message['container-title'];
-            $journal .= ' ' . join('/', array_filter([$message['volume'] ?? null, $message['issue'] ?? null]));
-            $journal = '<span>' . hsc($journal) . '</span>';
-            if (isset($message['page'])) {
-                $journal .= ' <i>p' . hsc($message['page']) . '</i>';
-            }
-            $journal = ' <span class="journal">' . $journal . '</span>';
-        } else {
-            $journal = '';
-        }
-
-        $published = $message['issued']['date-parts'][0][0] ?? '';
-        if ($published) $published = ' <span>(' . hsc($published) . ')</span>';
-
-        $publisher = hsc($message['publisher'] ?? '');
-
-        //output
-        $renderer->doc .= '<div class="plugin_doi ' . $class . '">';
-        $renderer->externallink($url, $title);
-        $renderer->doc .= $published;
-
-        $renderer->doc .= '<div class="meta">';
-        if ($authorList) {
-            $renderer->doc .= '<span class="authors">' . join(', ', $authorList) . '</span>';
-        }
-        if ($journal) {
-            $renderer->doc .= $journal;
-        }
-        $renderer->doc .= '</div>';
-
-        $renderer->doc .= '<div class="meta">';
-        if ($publisher) {
-            $renderer->doc .= '<span class="publisher">' . $publisher . '</span>';
-        }
-        $renderer->doc .= ' <code class="doi">DOI:' . $doi . '</code>';
-        $renderer->doc .= '</div>';
-
-        $renderer->doc .= '</div>';
+        return new DoiResolver();
     }
 
     /**
-     * Fetch the info for the given DOI
+     * Render the given data
      *
-     * @param string $doi
-     * @return false|array
+     * @param array $data
+     * @param Doku_Renderer_xhtml $renderer
+     * @return void
      */
-    protected function fetchInfo($doi)
+    protected function formatPub($data, $renderer)
     {
-        $cache = getCacheName($doi, '.doi.json');
-        if(@filemtime($cache) > filemtime(__FILE__)) {
-            return json_decode(file_get_contents($cache), true);
+        $renderer->doc .= '<div class="plugin_doi ' . hsc($data['type']) . '">';
+        $renderer->externallink($data['url'], $data['title']);
+
+        if ($data['published']) {
+            $renderer->doc .= ' <span>(' . hsc($data['published']) . ')</span>';
         }
 
-        $http = new \dokuwiki\HTTP\DokuHTTPClient();
-        $http->headers['Accept'] = 'application/vnd.citationstyles.csl+json';
-        $json = $http->get('https://doi.org/' . $doi);
-        if (!$json) return false;
+        $renderer->doc .= '<div class="meta">';
+        if ($data['authors']) {
+            $authors = array_map(function ($author) {
+                return '<strong>' . hsc($author) . '</strong>';
+            }, $data['authors']);
+            $renderer->doc .= '<span class="authors">' . join(', ', $authors) . '</span>';
+        }
+        if ($data['journal']) {
+            $journal = $data['journal'];
+            $journal .= ' ' . join('/', array_filter([$data['volume'] ?? null, $data['issue'] ?? null]));
+            $journal = '<span>' . hsc($journal) . '</span>';
+            if (isset($data['page'])) {
+                $journal .= ' <i>p' . hsc($data['page']) . '</i>';
+            }
+            $renderer->doc .= ' <span class="journal">' . $journal . '</span>';
+        }
+        $renderer->doc .= '</div>';
 
-        file_put_contents($cache, $json);
-        return json_decode($json, true);
+        $renderer->doc .= '<div class="meta">';
+        if ($data['publisher']) {
+            $renderer->doc .= '<span class="publisher">' . hsc($data['publisher']) . '</span>';
+        }
+        $renderer->doc .= ' <code class="id">'.$data['idtype'].':' . hsc($data['id']) . '</code>';
+        $renderer->doc .= '</div>';
+
+        $renderer->doc .= '</div>';
     }
 }
 
