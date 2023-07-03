@@ -52,23 +52,21 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
 
         try {
             $publication = $resolver->getData($data['id']);
-            $url = $publication['url'];
-            $title = $publication['title'];
         } catch (Exception $e) {
             msg(hsc($e->getMessage()), -1);
-            $publication = null;
             $url = $resolver->getFallbackURL($data['id']);
             $title = $data['id'];
-        }
 
-        // FIXME use nicer rendering for non-xhtml modes
-        if ($mode !== 'xhtml' || !$publication) {
             $renderer->externallink($url, $title);
             return true;
         }
 
-        /** @var Doku_Renderer_xhtml $renderer */
-        $this->formatPub($publication, $renderer);
+        if ($mode === 'xhtml') {
+            /** @var Doku_Renderer_xhtml $renderer */
+            $this->renderXHTML($publication, $renderer);
+        } else {
+            $this->renderAny($publication, $renderer);
+        }
 
         return true;
     }
@@ -82,13 +80,15 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     }
 
     /**
-     * Render the given data
+     * Render the given data on the XHTML renderer
+     *
+     * Adds various classes to the output for CSS styling
      *
      * @param array $data
      * @param Doku_Renderer_xhtml $renderer
      * @return void
      */
-    protected function formatPub($data, $renderer)
+    protected function renderXHTML($data, $renderer)
     {
         $renderer->doc .= '<div class="plugin_doi ' . hsc($data['type']) . '">';
         $renderer->externallink($data['url'], $data['title']);
@@ -108,7 +108,7 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
             $journal = $data['journal'];
             $journal .= ' ' . join('/', array_filter([$data['volume'] ?? null, $data['issue'] ?? null]));
             $journal = '<span>' . hsc($journal) . '</span>';
-            if (isset($data['page'])) {
+            if ($data['page']) {
                 $journal .= ' <i>p' . hsc($data['page']) . '</i>';
             }
             $renderer->doc .= ' <span class="journal">' . $journal . '</span>';
@@ -119,10 +119,66 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
         if ($data['publisher']) {
             $renderer->doc .= '<span class="publisher">' . hsc($data['publisher']) . '</span>';
         }
-        $renderer->doc .= ' <code class="id">'.$data['idtype'].':' . hsc($data['id']) . '</code>';
+        $renderer->doc .= ' <code class="id">' . $data['idtype'] . ':' . hsc($data['id']) . '</code>';
         $renderer->doc .= '</div>';
 
         $renderer->doc .= '</div>';
+    }
+
+    /**
+     * Render the given data on any renderer
+     *
+     * Uses renderer methods only
+     *
+     * @param array $data
+     * @param Doku_Renderer $renderer
+     * @return void
+     */
+    protected function renderAny($data, $renderer)
+    {
+        $renderer->p_open();
+        $renderer->externallink($data['url'], $data['title']);
+
+        if ($data['published']) {
+            $renderer->cdata(' (' . hsc($data['published']) . ')');
+        }
+        $renderer->linebreak();
+
+        if ($data['authors']) {
+            $len = count($data['authors']);
+            for ($i = 0; $i < $len; $i++) {
+                $renderer->strong_open();
+                $renderer->cdata($data['authors'][$i]);
+                $renderer->strong_close();
+                if ($i < $len - 1) {
+                    $renderer->cdata(', ');
+                }
+            }
+
+            if ($data['journal']) {
+                $journal = $data['journal'];
+                $journal .= ' ' . join('/', array_filter([$data['volume'] ?? null, $data['issue'] ?? null]));
+                $renderer->cdata(' ' . $journal);
+            }
+
+            if ($data['page']) {
+                $renderer->cdata(' ');
+                $renderer->emphasis_open();
+                $renderer->cdata('p' . $data['page']);
+                $renderer->emphasis_close();
+            }
+        }
+        $renderer->linebreak();
+
+        if ($data['publisher']) {
+            $renderer->cdata($data['publisher']);
+            $renderer->cdata(' ');
+        }
+        $renderer->monospace_open();
+        $renderer->cdata($data['idtype'] . ':' . hsc($data['id']));
+        $renderer->monospace_close();
+
+        $renderer->p_close();
     }
 }
 
