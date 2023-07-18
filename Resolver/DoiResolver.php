@@ -14,7 +14,7 @@ class DoiResolver extends AbstractResolver
         $result = $this->defaultResult;
 
         $result['id'] = $data['DOI'];
-        $result['title'] = $data['title'] ?? $id;
+        $result['title'] = empty($data['title']) ? $id : $data['title'];
         $result['url'] = $data['URL'] ?? 'https://doi.org/' . $id;
         $result['type'] = $data['type'];
         $result['idtype'] = 'DOI';

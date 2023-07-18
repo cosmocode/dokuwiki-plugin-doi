@@ -30,6 +30,7 @@ class IsbnGoogleBooksResolver extends AbstractIsbnResolver
 
         $result['title'] = $data['title'];
         if (isset($data['subtitle'])) $result['title'] .= ': ' . $data['subtitle'];
+        if(empty($result['title'])) $result['title'] = $id;
 
         $result['authors'] = $data['authors'] ?? [];
 

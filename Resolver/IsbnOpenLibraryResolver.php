@@ -20,6 +20,7 @@ class IsbnOpenLibraryResolver extends AbstractIsbnResolver
 
         $result['id'] = $message['isbn_13'][0] ?? $message['isbn_10'][0] ?? '';
         $result['title'] = $message['full_title'] ?? $message['title'] ?? $id;
+        if(empty($result['title'])) $result['title'] = $id;
 
         $result['authors'] = array_map(function ($author) {
             return $author['name'];

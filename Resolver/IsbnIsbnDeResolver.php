@@ -38,6 +38,7 @@ class IsbnIsbnDeResolver extends AbstractIsbnResolver
         $data['url'] = $this->extract('/<meta property="og:url" content="([^"]+)"/', $html);
 
         $data['title'] = $this->extract('/<meta property="og:title" content="([^"]+)"/', $html);
+        if(empty($data['title'])) $data['title'] = $id;
         $data['published'] = $this->extract('/<meta property="og:book:release_date" content="((\d){4})[^"]+"/', $html);
 
         $data['authors'] = $this->extractAll('/<a href="\/person\/.*?">(.+?)<\/a>/', $html);

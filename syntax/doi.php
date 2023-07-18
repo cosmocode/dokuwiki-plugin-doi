@@ -39,9 +39,10 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     /** @inheritDoc */
     public function handle($match, $state, $pos, Doku_Handler $handler)
     {
-        $doi = substr($match, 6, -2);
-
-        return ['id' => $doi];
+        $match = substr($match, 2, -2);
+        list(, $id) = sexplode('>', $match, 2);
+        list($id, $title) = sexplode('|', $id, 2);
+        return ['id' => $id, 'title' => $title];
     }
 
     /** @inheritDoc */
@@ -55,11 +56,14 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
         } catch (Exception $e) {
             msg(hsc($e->getMessage()), -1);
             $url = $resolver->getFallbackURL($data['id']);
-            $title = $data['id'];
+            $title = empty($data['title']) ? $data['id'] : $data['title'];
 
             $renderer->externallink($url, $title);
             return true;
         }
+
+        // overwritten title?
+        if (!empty($data['title'])) $publication['title'] = $data['title'];
 
         if ($mode === 'xhtml') {
             /** @var Doku_Renderer_xhtml $renderer */
