@@ -1,7 +1,7 @@
 base   doi
 author Andreas Gohr
 email  gohr@cosmocode.de
-date   2023-07-18
+date   2023-08-07
 name   doi plugin
 desc   Easily link to publications based on DOI (or ISBN)
 url    https://www.dokuwiki.org/plugin:doi
