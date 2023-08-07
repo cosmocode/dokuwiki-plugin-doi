@@ -25,7 +25,7 @@ const PluginDoi = {
         const ident = prompt(LANG.plugins.doi.prompt);
         if (!ident) return;
 
-        const isbnRegex = new RegExp('^(?=(?:\\D*\\d){10}(?:(?:\\D*\\d){3})?$)[\\d-]+$', 'i');
+        const isbnRegex = new RegExp('^((?:[0-9X][- ]?){10}|(?:[0-9X][- ]?){13})$', 'i');
         if (ident.match(isbnRegex)) {
             PluginDoi.insert('isbn', ident);
             return;
