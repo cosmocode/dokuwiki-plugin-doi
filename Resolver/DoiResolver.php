@@ -16,6 +16,7 @@ class DoiResolver extends AbstractResolver
         $result['id'] = $data['DOI'];
         $result['title'] = empty($data['title']) ? $id : $data['title'];
         $result['url'] = $data['URL'] ?? 'https://doi.org/' . $id;
+        $result['url'] = preg_replace('/^http:/', 'https:', $result['url']); // always use https
         $result['type'] = $data['type'];
         $result['idtype'] = 'DOI';
 
