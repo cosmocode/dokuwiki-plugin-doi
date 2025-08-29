@@ -16,6 +16,7 @@ class IsbnOpenLibraryResolver extends AbstractIsbnResolver
         $result = $this->defaultResult;
 
         $result['url'] = $message['info_url'];
+        $result['image'] = $message['thumbnail_url'] ?? '';
         $message = $message['details'];
 
         $result['id'] = $message['isbn_13'][0] ?? $message['isbn_10'][0] ?? '';

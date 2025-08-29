@@ -44,6 +44,8 @@ class IsbnIsbnDeResolver extends AbstractIsbnResolver
         $data['authors'] = $this->extractAll('/<a href="\/person\/.*?">(.+?)<\/a>/', $html);
         $data['publisher'] = $this->extract('/<a href="\/verlag\/.*?">(.+?)<\/a>/', $html);
 
+        $data['image'] = $this->extract('/<meta property="og:image" content="([^"]+)"/', $html);
+
         return $data;
     }
 

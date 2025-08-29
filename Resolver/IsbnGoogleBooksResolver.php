@@ -41,6 +41,12 @@ class IsbnGoogleBooksResolver extends AbstractIsbnResolver
 
         $result['publisher'] = $data['publisher'] ?? '';
 
+        $result['image'] = $data['imageLinks']['thumbnail'] ?? '';
+
+        if($result['image']) {
+            $result['image'] .= '?.jpg'; // force jpg extension
+        }
+
         return $result;
     }
 

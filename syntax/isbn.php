@@ -19,7 +19,9 @@ class syntax_plugin_doi_isbn extends syntax_plugin_doi_doi
     public function handle($match, $state, $pos, Doku_Handler $handler)
     {
         $isbn = substr($match, 7, -2);
-        return ['id' => $isbn];
+        return [
+            'id' => $isbn,
+        ];
     }
 
     /** @inheritDoc */

@@ -5,5 +5,5 @@
  * @author Andreas Gohr <gohr@cosmocode.de>
  */
 
-$conf['isbnresolver']    = 'GoogleBooks';
-
+$conf['isbnresolver'] = 'GoogleBooks';
+$conf['cover'] = 0;

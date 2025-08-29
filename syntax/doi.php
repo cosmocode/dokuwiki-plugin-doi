@@ -42,7 +42,10 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
         $match = substr($match, 2, -2);
         list(, $id) = sexplode('>', $match, 2);
         list($id, $title) = sexplode('|', $id, 2);
-        return ['id' => $id, 'title' => $title];
+        return [
+            'id' => $id,
+            'title' => $title,
+        ];
     }
 
     /** @inheritDoc */
@@ -64,6 +67,9 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
 
         // overwritten title?
         if (!empty($data['title'])) $publication['title'] = $data['title'];
+
+        // overwritten url (eg. by amazonlight plugin)?
+        if (!empty($data['url'])) $publication['url'] = $data['url'];
 
         if ($mode === 'xhtml') {
             /** @var Doku_Renderer_xhtml $renderer */
@@ -95,6 +101,22 @@ class syntax_plugin_doi_doi extends \dokuwiki\Extension\SyntaxPlugin
     protected function renderXHTML($data, $renderer)
     {
         $renderer->doc .= '<div class="plugin_doi ' . hsc($data['type']) . '">';
+
+        if( $this->getConf('cover') && $data['image'] ) {
+            $renderer->externallink(
+                $data['url'],
+                [
+                    'src' => $data['image'],
+                    'title' => $data['title'],
+                    'align' => 'left',
+                    'width' => 64,
+                    'height' => 90,
+                    'cache' => true,
+                    'type' => 'externalmedia'
+                ]
+            );
+        }
+
         $renderer->externallink($data['url'], $data['title']);
 
         if ($data['published']) {
